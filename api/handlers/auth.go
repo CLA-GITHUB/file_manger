@@ -36,7 +36,10 @@ func Signup(c *gin.Context) {
 
 	hashedPass, err := hashPassword(user.Password)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Could not hash password, try again."})
+		c.JSON(500, gin.H{
+			"error": "Could not hash password, try again.",
+			"data":  nil,
+		})
 		return
 	}
 
@@ -56,7 +59,10 @@ func Signin(c *gin.Context) {
 	var data types.Auth
 
 	if err := c.BindJSON(&data); err != nil {
-		c.JSON(500, gin.H{"error": "Could not extract username and password from body."})
+		c.JSON(500, gin.H{
+			"error": "Could not extract username and password from body.",
+			"data":  nil,
+		})
 		return
 	}
 
@@ -73,16 +79,22 @@ func Signin(c *gin.Context) {
 	fmt.Println(foundUser)
 
 	if foundUser == nil {
-		c.JSON(400, gin.H{"error": "Invalid username or password."})
+		c.JSON(400, gin.H{
+			"error": "Invalid username or password.",
+			"data":  nil,
+		})
 		return
 	}
 
 	passwordMatches := comparePassword(data.Password, foundUser.Password)
 
 	if !passwordMatches {
-		c.JSON(400, gin.H{"error": "Incorrect username or password."})
+		c.JSON(400, gin.H{
+			"error": "Invalid username or password.",
+			"data":  nil,
+		})
 		return
 	}
 
-	c.JSON(200, gin.H{"error": nil})
+	c.JSON(200, gin.H{"error": nil, "data": "success"})
 }
