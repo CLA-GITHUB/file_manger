@@ -6,6 +6,7 @@ import (
 
 	"github.com/cla-github/file_manager/db"
 	"github.com/cla-github/file_manager/types"
+	"github.com/cla-github/file_manager/utils"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -80,7 +81,26 @@ func Signin(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, gin.H{"error": nil, "data": "success"})
+	// generate jwt token
+	token, err := utils.GenerateJwt(foundUser.Id)
+	if err != nil {
+		c.JSON(401, gin.H{
+			"error": "Error creating jwt token",
+			"data":  nil,
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{"error": nil, "data": token})
+}
+
+func Me(c *gin.Context) {
+	userId := c.GetString("uid")
+
+	c.JSON(200, gin.H{
+		"error": nil,
+		"data":  userId,
+	})
 }
 
 func hashPassword(password string) (string, error) {
