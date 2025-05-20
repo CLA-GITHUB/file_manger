@@ -10,22 +10,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func hashPassword(password string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-
-	return string(hash), err
-}
-
-func comparePassword(password, hash string) bool {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-
-	if err != nil {
-		return false
-	}
-
-	return true
-}
-
 func Signup(c *gin.Context) {
 	var user types.User
 
@@ -97,4 +81,20 @@ func Signin(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"error": nil, "data": "success"})
+}
+
+func hashPassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+
+	return string(hash), err
+}
+
+func comparePassword(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+
+	if err != nil {
+		return false
+	}
+
+	return true
 }
