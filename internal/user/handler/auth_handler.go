@@ -103,9 +103,13 @@ func Me(c *gin.Context) {
 	}
 
 	user := userService.GetMe(userId)
-
-	// remove password from response
-	user.Password = ""
+	if user == nil {
+		c.JSON(200, gin.H{
+			"error": "User not found.",
+			"data":  nil,
+		})
+		return
+	}
 
 	c.JSON(200, gin.H{
 		"error": nil,

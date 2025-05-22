@@ -9,18 +9,28 @@ import (
 func SetupRouter() *gin.Engine {
 	router := gin.Default()
 
-	router.GET("/ping", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{
-			"error": nil,
-			"data":  "Pong...",
-		})
-	})
-
 	router.POST("/auth", user.Signin)
 	router.POST("/auth/create-account", user.Signup)
 
-	// testing protected middleware route
-	router.GET("/me", middlewares.AuthMiddleware(), user.Me)
+	v1 := router.Group("/v1/api")
+	{
+		// test connection
+		v1.GET("/ping", func(ctx *gin.Context) {
+			ctx.JSON(200, gin.H{
+				"error": nil,
+				"data":  "Pong...",
+			})
+		})
 
+		// auth routes
+		authRoutes := v1.Group("/auth")
+		{
+			authRoutes.POST("/", user.Signin)
+			authRoutes.POST("/create-account", user.Signup)
+		}
+
+		// testing protected middleware route
+		v1.GET("/me", middlewares.AuthMiddleware(), user.Me)
+	}
 	return router
 }
