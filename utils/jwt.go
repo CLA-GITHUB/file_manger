@@ -6,9 +6,10 @@ import (
 
 	"github.com/cla-github/file_manager/types"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
-func GenerateJwt(uid string) (string, error) {
+func GenerateJwt(uid uuid.UUID) (string, error) {
 	claims := types.Claims{
 		UserId: uid,
 		RegisteredClaims: jwt.RegisteredClaims{

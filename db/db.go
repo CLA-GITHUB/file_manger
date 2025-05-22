@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cla-github/file_manager/types"
+	userModel "github.com/cla-github/file_manager/internal/user"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -24,17 +24,17 @@ func Connect() {
 	var err error
 
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-
 	if err != nil {
 		panic("Failed to connect to DB: " + err.Error())
 	}
-}
 
-var Users = []types.User{
-	{
-		Id:       "kfjie939",
-		Username: "cla",
-		Password: "$2a$14$ZQsaN4aXs8bYUfaH4pgXmeCupUdXGwzsiVkvuqQjf8xhQFZdA3YrS",
-		Email:    "cla@outlook.com",
-	},
+	//drop tables before recreating
+	DB.Migrator().DropTable(&userModel.User{})
+
+	// models migrations
+	err = DB.AutoMigrate(&userModel.User{})
+	if err != nil {
+
+		panic("Failed to migrate tables" + err.Error())
+	}
 }

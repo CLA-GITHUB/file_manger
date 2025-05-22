@@ -1,20 +1,20 @@
 package user
 
 import (
-	"fmt"
 	"net/http"
 
-	"github.com/cla-github/file_manager/db"
-	"github.com/cla-github/file_manager/types"
+	model "github.com/cla-github/file_manager/internal/user"
+	userService "github.com/cla-github/file_manager/internal/user/service"
 	"github.com/cla-github/file_manager/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func Signup(c *gin.Context) {
-	var user types.User
+	var user model.User
 
-	if err := c.BindJSON(&user); err != nil {
+	if err := c.ShouldBind(&user); err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
@@ -28,22 +28,31 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	formattedUser := types.User{
-		Username: user.Username,
-		Password: hashedPass,
-		Email:    user.Email,
+	user.Password = hashedPass
+
+	err = userService.CreateUser(user)
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": err.Error(),
+			"data":  nil,
+		})
+		return
 	}
 
-	//TODO: Add formatted user to db
-	updatedUsers := append(db.Users, formattedUser)
-	c.IndentedJSON(http.StatusOK, updatedUsers)
-
+	c.JSON(http.StatusOK, gin.H{
+		"error": nil,
+		"data":  "User creation successful.",
+	})
 }
 
 func Signin(c *gin.Context) {
-	var data types.Auth
+	type Auth struct {
+		Email    string
+		Password string
+	}
+	var data Auth
 
-	if err := c.BindJSON(&data); err != nil {
+	if err := c.ShouldBind(&data); err != nil {
 		c.JSON(500, gin.H{
 			"error": "Could not extract username and password from body.",
 			"data":  nil,
@@ -51,21 +60,10 @@ func Signin(c *gin.Context) {
 		return
 	}
 
-	var foundUser *types.User
-
-	for _, u := range db.Users {
-		if u.Username == data.Username {
-
-			fmt.Println(u)
-			foundUser = &u
-			break
-		}
-	}
-	fmt.Println(foundUser)
-
+	foundUser := userService.GetUserByEmail(data.Email)
 	if foundUser == nil {
 		c.JSON(400, gin.H{
-			"error": "Invalid username or password.",
+			"error": "Invalid email or password.",
 			"data":  nil,
 		})
 		return
@@ -82,7 +80,7 @@ func Signin(c *gin.Context) {
 	}
 
 	// generate jwt token
-	token, err := utils.GenerateJwt(foundUser.Id)
+	token, err := utils.GenerateJwt(foundUser.ID)
 	if err != nil {
 		c.JSON(401, gin.H{
 			"error": "Error creating jwt token",
@@ -95,11 +93,23 @@ func Signin(c *gin.Context) {
 }
 
 func Me(c *gin.Context) {
-	userId := c.GetString("uid")
+	userId, err := uuid.Parse(c.GetString("uid"))
+	if err != nil {
+		c.JSON(500, gin.H{
+			"error": err.Error(),
+			"data":  nil,
+		})
+		return
+	}
+
+	user := userService.GetMe(userId)
+
+	// remove password from response
+	user.Password = ""
 
 	c.JSON(200, gin.H{
 		"error": nil,
-		"data":  userId,
+		"data":  user,
 	})
 }
 

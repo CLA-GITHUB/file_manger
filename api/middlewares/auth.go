@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -56,8 +57,8 @@ func AuthMiddleware() gin.HandlerFunc {
 			})
 			return
 		}
-
-		c.Set("uid", claims.UserId)
+		fmt.Printf("claims %s", claims)
+		c.Set("uid", claims.UserId.String())
 
 		c.Next()
 	}
